@@ -76,6 +76,29 @@ export default function App() {
     }
   }, [token]);
 
+  // Quick login for Sandbox bypass
+  const handleQuickLogin = (selectedEmail: string) => {
+    setAuthError('');
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: selectedEmail, password: 'password123' })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Invalid email or password credentials.');
+      return res.json();
+    })
+    .then(data => {
+      // Direct pass - bypass 2FA for developer sandbox quick login
+      setToken('token_' + data.user.id);
+      setUser(data.user);
+      setRequires2FA(false);
+    })
+    .catch(err => {
+      setAuthError(err.message);
+    });
+  };
+
   // Handle Login submission
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,6 +297,39 @@ export default function App() {
                   </button>
                 </p>
               </div>
+
+              {/* Sandbox Quick Access Panel */}
+              <div className="pt-4 border-t border-slate-800 space-y-3">
+                <div className="flex items-center gap-1.5 justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Sandbox Developer Bypass
+                  </h4>
+                </div>
+                <p className="text-[10px] text-slate-450 text-center leading-relaxed">
+                  This sandbox does not dispatch real emails or SMS verification OTPs. Use the direct credentials or click below to login instantly.
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickLogin('kumar.sachin.bittu@gmail.com')}
+                    className="p-2 bg-slate-800 hover:bg-slate-750 hover:text-white border border-slate-700/60 rounded-xl transition-all cursor-pointer font-medium text-center text-slate-300"
+                  >
+                    👤 Kumar (Super Admin)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickLogin('simran@ordervoice.ai')}
+                    className="p-2 bg-slate-800 hover:bg-slate-750 hover:text-white border border-slate-700/60 rounded-xl transition-all cursor-pointer font-medium text-center text-slate-300"
+                  >
+                    👤 Simran (Company Admin)
+                  </button>
+                </div>
+                <div className="text-[9px] text-slate-450 text-center bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80">
+                  <span className="font-semibold text-slate-450">Default Password:</span> <code className="text-indigo-400 font-mono font-semibold">password123</code><br/>
+                  <span className="font-semibold text-slate-450">Simulated 2FA OTP:</span> <code className="text-indigo-400 font-mono font-semibold">49210</code>
+                </div>
+              </div>
             </form>
           ) : authMode === 'register' ? (
             /* Signup flow mockup */
@@ -337,7 +393,10 @@ export default function App() {
             <div className="space-y-4 text-xs">
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">Reset admin authority keywords</h3>
-                <p className="text-[10px] text-slate-400 leading-relaxed">Enter your email and standard password-reset-token linkage emails will dispatch immediately.</p>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Enter your email. Since this is a local developer container sandbox, actual email delivery is disabled. 
+                  Your temporary recovery password is <code className="text-indigo-400 font-mono font-bold">password123</code>.
+                </p>
               </div>
 
               <div className="space-y-1">
@@ -345,16 +404,27 @@ export default function App() {
                 <input 
                   type="email" 
                   required 
+                  placeholder="kumar.sachin.bittu@gmail.com"
                   className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs focus:outline-none"
                 />
               </div>
 
               <button 
-                onClick={() => { setAuthError(' लिंक ईमेल पर भेज दिया गया है । Link dispatched.'); setAuthMode('login'); }}
+                onClick={() => { setAuthError('लिंक ईमेल पर भेज दिया गया है (Simulated). Your bypass password is "password123".'); setAuthMode('login'); }}
                 className="w-full bg-indigo-600 p-2.5 rounded-xl text-xs font-semibold hover:bg-indigo-500 transition-colors cursor-pointer"
               >
                 Dispatch reset mailer
               </button>
+
+              <div className="text-center pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                  className="text-[10px] text-indigo-400 hover:underline"
+                >
+                  Return to Login & Bypass
+                </button>
+              </div>
             </div>
           )}
 
